@@ -1,0 +1,4 @@
+rootProject.name = 'mikeiansky-oauth2'
+
+
+include('mikeiansky-oauth2-authorization-server')
