@@ -4,9 +4,12 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter'
 
-	implementation(libs.mysql.connector.java)
-	implementation(libs.mybatis.plus.generator)
-	implementation(libs.mybatis.plus.extension)
+	implementation libs.mysql.connector.java
+	implementation libs.mybatis.plus.generator
+	implementation libs.mybatis.plus.extension
+	implementation libs.mybatis.plus.spring.boot3.starter
+	implementation 'org.freemarker:freemarker:2.3.32'
+
 }
 
 

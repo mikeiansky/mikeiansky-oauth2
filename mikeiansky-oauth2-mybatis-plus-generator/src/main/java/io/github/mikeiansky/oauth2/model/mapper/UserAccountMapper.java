@@ -3,6 +3,7 @@ package io.github.mikeiansky.oauth2.model.mapper;
 import io.github.mikeiansky.oauth2.model.entity.UserAccount;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+
 /**
  * <p>
  * 用户账户表 Mapper 接口
@@ -14,3 +15,4 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 public interface UserAccountMapper extends BaseMapper<UserAccount> {
 
 }
+
