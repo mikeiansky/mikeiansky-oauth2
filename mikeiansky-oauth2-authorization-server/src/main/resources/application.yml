@@ -1,6 +1,11 @@
 server:
   port: 9001
 
+mybatis-plus:
+  configuration:
+    # [dev]
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 spring:
   application:
     name: mikeiansky-oauth2-authorization-server
