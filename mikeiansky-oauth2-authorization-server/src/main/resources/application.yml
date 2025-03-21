@@ -1,3 +1,9 @@
+logging:
+  level:
+    root: INFO
+    org.springframework.web: TRACE
+    org.springframework.security: INFO
+
 server:
   port: 9001
 
@@ -12,3 +18,24 @@ spring:
   session:
     redis:
       namespace: mikeiansky:oauth2
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:9001
+        client:
+              login-client:
+                registration:
+                  client-id: "login-client"
+                  client-secret: "{noop}openid-connect"
+                  client-authentication-methods:
+                    - "client_secret_basic"
+                  authorization-grant-types:
+                    - "authorization_code"
+                    - "refresh_token"
+                  redirect-uris:
+                    - "http://127.0.0.1:8001/login/oauth2/code/login-client"
+                    - "http://127.0.0.1:8001/authorized"
+                  scopes:
+                    - "openid"
+                    - "profile"
+                require-authorization-consent: true

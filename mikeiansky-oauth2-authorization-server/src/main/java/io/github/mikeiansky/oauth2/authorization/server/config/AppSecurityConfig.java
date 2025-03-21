@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 
@@ -17,7 +18,11 @@ public class AppSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                OAuth2AuthorizationServerConfigurer.authorizationServer();
+
         httpSecurity
+                .with(authorizationServerConfigurer, authorizationServer-> authorizationServer.oidc(Customizer.withDefaults()))
                 .authorizeHttpRequests(auth -> {
                     auth.anyRequest().authenticated();
                 })
