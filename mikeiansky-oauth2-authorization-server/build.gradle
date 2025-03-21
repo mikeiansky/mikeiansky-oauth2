@@ -15,6 +15,7 @@ dependencies {
     implementation libs.mysql.connector.java
     implementation libs.fastjson2
     implementation libs.hutool.all
+    implementation libs.mikeiansky.utils.context
 
     implementation project(":mikeiansky-oauth2-model")
 

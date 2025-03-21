@@ -1,8 +1,8 @@
-spring:
-  application:
-    name: mikeiansky-oauth2-mybatis-plus-generator
-  datasource:
-      url: jdbc:mysql://172.16.2.232:3306/mikeiansky_oauth2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      username: root
-      password: 123456
+#spring:
+#  application:
+#    name: mikeiansky-oauth2-mybatis-plus-generator
+#  datasource:
+#      url: jdbc:mysql://172.16.2.232:3306/mikeiansky_oauth2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+#      username: root
+#      password: 123456

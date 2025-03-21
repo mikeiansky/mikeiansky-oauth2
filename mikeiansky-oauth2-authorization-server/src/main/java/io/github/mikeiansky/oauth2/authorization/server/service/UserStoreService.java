@@ -1,7 +1,10 @@
 package io.github.mikeiansky.oauth2.authorization.server.service;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.github.mikeiansky.oauth2.model.entity.UserAccount;
+import io.github.mikeiansky.oauth2.model.entity.UserAuthority;
+import io.github.mikeiansky.utils.CollKit;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,11 +30,19 @@ public class UserStoreService implements UserDetailsService {
         if (userAccount == null) {
             return null;
         }
+
+        List<SimpleGrantedAuthority> authorityList = CollKit.toList(Db.lambdaQuery(UserAuthority.class)
+                .eq(UserAuthority::getUserId, userAccount.getId())
+                .list(), userAuthority -> new SimpleGrantedAuthority(userAuthority.getAuthority()));
+        if (CollUtil.isEmpty(authorityList)) {
+            authorityList = List.of(new SimpleGrantedAuthority("user"));
+        }
+
         // 查询权限
-        User user = new User(userAccount.getUsername(),
-                userAccount.getPassword(),
-                List.of(new SimpleGrantedAuthority("user")));
-        return user;
+        return User.withUsername(userAccount.getUsername())
+                .password(userAccount.getPassword())
+                .authorities(authorityList)
+                .build();
     }
 
 }

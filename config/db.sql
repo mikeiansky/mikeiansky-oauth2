@@ -15,3 +15,12 @@ CREATE TABLE `user_account` (
     UNIQUE KEY `uk_mobile_ac` (`mobile`,`area_code`) USING BTREE COMMENT '手机号码唯一索引',
     UNIQUE KEY `uk_email` (`email`) USING BTREE COMMENT '邮箱唯一索引'
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户账户表';
+
+-- 创建用户权限表
+CREATE TABLE `user_authority` (
+                                  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+                                  `authority` varchar(50) NOT NULL COMMENT '权限',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_uid` (`user_id`) USING BTREE COMMENT '用户ID索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户权限表';
