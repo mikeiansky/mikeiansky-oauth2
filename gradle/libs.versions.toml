@@ -1,0 +1,11 @@
+[versions]
+mysql = "8.0.32"
+mybatisPlus = "3.5.10.1"
+lombok = "1.18.24"
+
+[libraries]
+mysql-connector-java = { module = "mysql:mysql-connector-java", version.ref = "mysql" }
+mybatis-plus-generator = { module = "com.baomidou:mybatis-plus-generator", version.ref = "mybatisPlus" }
+mybatis-plus-extension = { module = "com.baomidou:mybatis-plus-extension", version.ref = "mybatisPlus" }
+mybatis-plus-spring-boot3-starter = { module = "com.baomidou:mybatis-plus-spring-boot3-starter", version.ref = "mybatisPlus" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }

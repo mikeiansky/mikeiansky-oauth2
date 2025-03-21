@@ -1,0 +1,15 @@
+
+dependencies {
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter'
+
+	implementation(libs.mysql.connector.java)
+	implementation(libs.mybatis.plus.generator)
+	implementation(libs.mybatis.plus.extension)
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

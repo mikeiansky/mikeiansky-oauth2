@@ -1,11 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.3'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.4.3' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
-
-group = 'io.github.mikeiansky'
-version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
@@ -13,13 +10,31 @@ java {
     }
 }
 
+group = 'io.github.mikeiansky'
+version = '0.0.1-SNAPSHOT'
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+ext {
+
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'io.github.mikeiansky'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    dependencies {
+        // 引入 Lombok
+        compileOnly libs.lombok   // compileOnly 表示 Lombok 只会在编译时可用，不会包含在生产代码中
+        annotationProcessor libs.lombok  // Lombok 的注解处理器
+    }
+
 }

@@ -2,3 +2,5 @@ rootProject.name = 'mikeiansky-oauth2'
 
 include('mikeiansky-oauth2-authorization-server')
 include('mikeiansky-oauth2-client')
+include('mikeiansky-oauth2-model')
+include('mikeiansky-oauth2-mybatis-plus-generator')
