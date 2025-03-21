@@ -2,23 +2,23 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // spring
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.session:spring-session-data-redis:3.4.2'
 
+    // open source
     implementation libs.mybatis.plus.spring.boot3.starter
     implementation libs.mysql.connector.java
+    implementation libs.fastjson2
+    implementation libs.hutool.all
 
     implementation project(":mikeiansky-oauth2-model")
 
 }
-
-// 依赖管理
-//dependencyManagement {
-//    imports {
-//        mavenBom "com.baomidou:mybatis-plus-bom:3.5.9+"
-//    }
-//}
 
 tasks.named('test') {
     useJUnitPlatform()

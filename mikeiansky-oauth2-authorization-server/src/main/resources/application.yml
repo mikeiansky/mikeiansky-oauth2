@@ -9,3 +9,6 @@ mybatis-plus:
 spring:
   application:
     name: mikeiansky-oauth2-authorization-server
+  session:
+    redis:
+      namespace: mikeiansky:oauth2
