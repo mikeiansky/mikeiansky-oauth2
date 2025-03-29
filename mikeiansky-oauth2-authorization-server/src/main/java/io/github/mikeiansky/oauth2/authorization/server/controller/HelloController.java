@@ -24,9 +24,12 @@ public class HelloController {
     public String redis(){
         Object cache = redisTemplate.opsForValue().get("info");
         if (cache != null) {
+            redisTemplate.opsForValue().increment("info", 1);
             return cache.toString();
+        } else {
+            redisTemplate.opsForValue().increment("info", 1);
         }
-        return "Hello Redis!";
+        return "Hello Redis! ";
     }
 
 }
