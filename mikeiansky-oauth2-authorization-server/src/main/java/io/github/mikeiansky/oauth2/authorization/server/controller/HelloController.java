@@ -14,20 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HelloController {
 
-    private final RedisTemplate<String,Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public HelloController(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @GetMapping("redis")
-    public String redis(){
-        Object cache = redisTemplate.opsForValue().get("info");
+    public String redis() {
+        String infoTag = "info-02";
+        Object cache = redisTemplate.opsForValue().get(infoTag);
         if (cache != null) {
-            redisTemplate.opsForValue().increment("info", 1);
-            return cache.toString();
+//            redisTemplate.opsForValue().increment(infoTag, 1);
+//            return cache.toString();
         } else {
-            redisTemplate.opsForValue().increment("info", 1);
+            redisTemplate.opsForValue().increment(infoTag, 1);
         }
         return "Hello Redis! ";
     }
