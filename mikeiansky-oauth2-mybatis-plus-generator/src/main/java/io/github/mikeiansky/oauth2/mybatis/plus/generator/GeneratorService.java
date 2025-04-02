@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 @Service
 public class GeneratorService {
 
-    public void generator(){
+    public static void generator(){
         String outputDir = System.getProperty("user.dir") + File.separator
                 + "mikeiansky-oauth2-mybatis-plus-generator"
                 + "/src/main/java";
@@ -44,6 +44,10 @@ public class GeneratorService {
                 .templateEngine(new FreemarkerTemplateEngine())
                 .execute();
 
+    }
+
+    public static void main(String[] args) {
+        generator();
     }
 
 }
