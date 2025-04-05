@@ -25,8 +25,8 @@ public class HelloController {
         String infoTag = "info-02";
         Object cache = redisTemplate.opsForValue().get(infoTag);
         if (cache != null) {
-//            redisTemplate.opsForValue().increment(infoTag, 1);
-//            return cache.toString();
+            redisTemplate.opsForValue().increment(infoTag, 1);
+            return cache.toString();
         } else {
             redisTemplate.opsForValue().increment(infoTag, 1);
         }
