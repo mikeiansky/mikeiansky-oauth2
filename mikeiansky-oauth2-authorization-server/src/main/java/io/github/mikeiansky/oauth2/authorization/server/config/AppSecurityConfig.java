@@ -8,6 +8,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.CookieRequestCache;
 
 
 /**
@@ -22,11 +23,13 @@ public class AppSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, RedisTemplate<String, Object> redisTemplate) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
-
         httpSecurity
                 .with(authorizationServerConfigurer, authorizationServer->
                         authorizationServer.oidc(Customizer.withDefaults())
                 )
+                .requestCache(requestCache -> {
+                    requestCache.requestCache(new CookieRequestCache());
+                })
                 .securityContext(securityContext-> {
                     securityContext.securityContextRepository(new RedisSecurityContextRepository(redisTemplate));
                 })

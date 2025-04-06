@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.util.WebUtils;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -41,11 +42,11 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
-        String authToken = getCookieValue(requestResponseHolder.getRequest(), AUTHENTICATION_TOKEN_PREFIX);
-        if (authToken == null) {
+        Cookie authTokenCookie = WebUtils.getCookie(requestResponseHolder.getRequest(), AUTHENTICATION_TOKEN_PREFIX);
+        if (authTokenCookie == null) {
             return null;
         }
-        Object cache = redisTemplate.opsForValue().get(generateAuthTokenKey(authToken));
+        Object cache = redisTemplate.opsForValue().get(generateAuthTokenKey(authTokenCookie.getValue()));
         if (cache == null) {
             return null;
         }
