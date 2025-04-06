@@ -67,6 +67,7 @@ public class TestRSA {
 //        RSAKey key = new RSAKey();
         RSAKey rsaKey = new RSAKey.Builder(publicKey).privateKey(privateKey).build();
         System.out.println(rsaKey );
+        System.out.println(rsaKey.toPublicJWK());
 
         byte[] publicEncoded = publicKey.getEncoded();
         byte[] privateEncoded = privateKey.getEncoded();
