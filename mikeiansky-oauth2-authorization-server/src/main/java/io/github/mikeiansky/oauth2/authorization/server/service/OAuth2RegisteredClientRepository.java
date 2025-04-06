@@ -3,7 +3,6 @@ package io.github.mikeiansky.oauth2.authorization.server.service;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.github.mikeiansky.oauth2.model.entity.Oauth2Client;
-import io.github.mikeiansky.utils.ConvertKit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
