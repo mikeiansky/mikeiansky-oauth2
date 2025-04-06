@@ -1,5 +1,6 @@
 package io.github.mikeiansky.oauth2.authorization.server.service;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import io.github.mikeiansky.oauth2.model.entity.Oauth2Client;
@@ -9,15 +10,21 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ConfigurationSettingNames;
+import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,6 +56,36 @@ public class OAuth2RegisteredClientRepository implements RegisteredClientReposit
 
         if (oauth2Client == null) {
             return null;
+        }
+
+
+        TokenSettings tokenSettings = null;
+        if (StringUtils.hasText(oauth2Client.getTokenSettings())) {
+            JSONObject tokenSettingsMap = JSONObject.parseObject(oauth2Client.getTokenSettings());
+            if (tokenSettingsMap.get(ConfigurationSettingNames.Token.AUTHORIZATION_CODE_TIME_TO_LIVE) != null) {
+                tokenSettingsMap.put(ConfigurationSettingNames.Token.AUTHORIZATION_CODE_TIME_TO_LIVE, Duration.of(
+                   Integer.parseInt(tokenSettingsMap.get(ConfigurationSettingNames.Token.AUTHORIZATION_CODE_TIME_TO_LIVE).toString()),
+                        ChronoUnit.MINUTES
+                ));
+            }
+            if (tokenSettingsMap.get(ConfigurationSettingNames.Token.ACCESS_TOKEN_TIME_TO_LIVE) != null) {
+                tokenSettingsMap.put(ConfigurationSettingNames.Token.ACCESS_TOKEN_TIME_TO_LIVE, Duration.of(
+                        Integer.parseInt(tokenSettingsMap.get(ConfigurationSettingNames.Token.ACCESS_TOKEN_TIME_TO_LIVE).toString()),
+                        ChronoUnit.MINUTES
+                ));
+            }
+            if (tokenSettingsMap.get(ConfigurationSettingNames.Token.REFRESH_TOKEN_TIME_TO_LIVE) != null) {
+                tokenSettingsMap.put(ConfigurationSettingNames.Token.REFRESH_TOKEN_TIME_TO_LIVE, Duration.of(
+                        Integer.parseInt(tokenSettingsMap.get(ConfigurationSettingNames.Token.REFRESH_TOKEN_TIME_TO_LIVE).toString()),
+                        ChronoUnit.MINUTES
+                ));
+            }
+            if (tokenSettingsMap.get(ConfigurationSettingNames.Token.ACCESS_TOKEN_FORMAT) != null) {
+                tokenSettingsMap.put(ConfigurationSettingNames.Token.ACCESS_TOKEN_FORMAT, new OAuth2TokenFormat(
+                        tokenSettingsMap.get(ConfigurationSettingNames.Token.ACCESS_TOKEN_FORMAT).toString()
+                ));
+            }
+            tokenSettings = TokenSettings.withSettings(tokenSettingsMap).build();
         }
 
 
@@ -87,10 +124,7 @@ public class OAuth2RegisteredClientRepository implements RegisteredClientReposit
                                         .build() :
                                 null
                 )
-                .tokenSettings(
-                        StringUtils.hasText(oauth2Client.getTokenSettings()) ?
-                                TokenSettings.withSettings(JSONObject.parseObject(oauth2Client.getTokenSettings())).build() :
-                                null)
+                .tokenSettings(tokenSettings)
                 .build();
     }
 
