@@ -24,6 +24,7 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: http://127.0.0.1:8001/login/oauth2/code/login-client
             scope: openid,profile
+#            scope: profile
             client-name: Spring
         provider:
           spring:

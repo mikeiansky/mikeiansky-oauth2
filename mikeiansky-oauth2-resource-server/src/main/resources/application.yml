@@ -1,0 +1,12 @@
+server:
+  port: 8002
+
+spring:
+  application:
+    name: mikeiansky-oauth2-resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9001/issuer
+          jwk-set-uri: http://localhost:9001/oauth2/jwks
