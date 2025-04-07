@@ -19,8 +19,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 public class AppSecurityContextConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    String jwkSetUri;
+//    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+//    String jwkSetUri;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,14 +33,17 @@ public class AppSecurityContextConfig {
                         .requestMatchers(HttpMethod.POST, "/message/**").hasAuthority("SCOPE_profile")
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()));
+                .oauth2ResourceServer((oauth2) -> {
+//                    oauth2.jwt(withDefaults());
+                    oauth2.opaqueToken(withDefaults());
+                });
         // @formatter:on
         return http.build();
     }
 
-    @Bean
-    JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri(this.jwkSetUri).build();
-    }
+//    @Bean
+//    JwtDecoder jwtDecoder() {
+//        return NimbusJwtDecoder.withJwkSetUri(this.jwkSetUri).build();
+//    }
 
 }
