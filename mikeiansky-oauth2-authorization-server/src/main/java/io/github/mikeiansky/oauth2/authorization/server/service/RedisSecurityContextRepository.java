@@ -25,17 +25,6 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         this.redisTemplate = redisTemplate;
     }
 
-    public static String getCookieValue(HttpServletRequest request, String name) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (name.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
-
     public static String generateAuthTokenKey(String key){
         return String.join(":", AUTHENTICATION_TOKEN_PREFIX, key);
     }
