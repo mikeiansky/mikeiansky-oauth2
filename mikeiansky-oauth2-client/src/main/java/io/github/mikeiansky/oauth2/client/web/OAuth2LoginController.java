@@ -16,6 +16,7 @@
 
 package io.github.mikeiansky.oauth2.client.web;
 
+import com.alibaba.fastjson2.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,11 +59,15 @@ public class OAuth2LoginController {
     @GetMapping("/")
     public String index(Model model, @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
                         @AuthenticationPrincipal OAuth2User oauth2User) {
-        System.out.println(" <<< ------------------- >>>");
-        model.addAttribute("userName", oauth2User.getName());
+        System.out.println(" <<< ------------------- >>> ");
+        model.addAttribute("userName", oauth2User.getName() != null? oauth2User.getName(): "unknow");
         model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
         model.addAttribute("userAttributes", oauth2User.getAttributes());
 
+        System.out.println("== start oauth2 user == ");
+        System.out.println("oauth2 user class : " + oauth2User.getClass());
+        System.out.println(JSON.toJSONString(oauth2User));
+        System.out.println("== end oauth2 user == ");
         System.out.println("== start access token == ");
         System.out.println(authorizedClient.getAccessToken().getTokenValue());
         System.out.println("== end access token == ");
