@@ -49,6 +49,7 @@ public class OAuth2LoginController {
 
     /**
      * 这里在解析 authorizedClient 会去判断当前的token是否过期，如果过期则会去刷新
+     *
      * @param model
      * @param authorizedClient
      * @param oauth2User
@@ -57,10 +58,18 @@ public class OAuth2LoginController {
     @GetMapping("/")
     public String index(Model model, @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
                         @AuthenticationPrincipal OAuth2User oauth2User) {
-        System.out.println("------------> ////// ");
+        System.out.println(" <<< ------------------- >>>");
         model.addAttribute("userName", oauth2User.getName());
         model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
         model.addAttribute("userAttributes", oauth2User.getAttributes());
+
+        System.out.println("== start access token == ");
+        System.out.println(authorizedClient.getAccessToken().getTokenValue());
+        System.out.println("== end access token == ");
+        System.out.println("== start refresh token == ");
+        System.out.println(authorizedClient.getRefreshToken().getTokenValue());
+        System.out.println("== end refresh token == ");
+
         return "index";
     }
 
