@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.endpoint.DefaultRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -39,24 +40,28 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class OAuth2LoginController {
 
-	private final OAuth2AuthorizedClientManager clientManager;
+    private final OAuth2AuthorizedClientManager clientManager;
 
 
     public OAuth2LoginController(OAuth2AuthorizedClientManager clientManager) {
         this.clientManager = clientManager;
     }
 
+    /**
+     * 这里在解析 authorizedClient 会去判断当前的token是否过期，如果过期则会去刷新
+     * @param model
+     * @param authorizedClient
+     * @param oauth2User
+     * @return
+     */
     @GetMapping("/")
-	public String index(Model model, @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
-			@AuthenticationPrincipal OAuth2User oauth2User) {
-		System.out.println("------------> ////// ");
-		model.addAttribute("userName", oauth2User.getName());
-		model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
-		model.addAttribute("userAttributes", oauth2User.getAttributes());
-
-		System.out.println("new access token : "+authorizedClient.getAccessToken().getTokenValue());
-
-		return "index";
-	}
+    public String index(Model model, @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
+                        @AuthenticationPrincipal OAuth2User oauth2User) {
+        System.out.println("------------> ////// ");
+        model.addAttribute("userName", oauth2User.getName());
+        model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
+        model.addAttribute("userAttributes", oauth2User.getAttributes());
+        return "index";
+    }
 
 }
