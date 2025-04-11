@@ -1,11 +1,18 @@
 package io.github.mikeiansky.oauth2.authorization.server;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.ObjectId;
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.HashUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.RandomUtil;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -17,29 +24,20 @@ import java.util.stream.Stream;
 public class TestOther {
 
     public static void main(String[] args) {
+        String key = UUID.randomUUID().toString();
+        System.out.println(key);
+        String hash1 = DigestUtils.sha256Hex(key);
+        System.out.println(hash1);
+        String hash2 = DigestUtils.sha1Hex(key);
+        System.out.println(hash2);
+        String hash3 = DigestUtils.md2Hex(key);
+        System.out.println(hash3);
+        String hash4 = DigestUtils.md5Hex(key);
+        System.out.println(hash4);
 
-//        String grantType = "openid,profile";
-//        Stream.of(grantType.split(","))
-//                .forEach(System.out::println);
+        // username, mobile, email，发送验证码
 
-//        System.out.println(Instant.now());
-//        System.out.println(DateUtil.now());
-//
-//        String now = DateUtil.now();
-//// 定义格式（确保匹配你的字符串格式）
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//
-//        // 解析为 LocalDateTime
-//        LocalDateTime localDateTime = LocalDateTime.parse(now, formatter);
-//
-//        // 转换为 Instant，使用 UTC 时区
-//        Instant instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
-//        System.out.println(instant);
-//
-//        System.out.println(ZoneId.systemDefault());
-
-        System.out.println(UUID.randomUUID().toString());
-
+//        GSON.toJson("Invalid state parameter.");
     }
 
 }

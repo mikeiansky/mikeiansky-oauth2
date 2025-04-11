@@ -16,6 +16,8 @@ dependencies {
     implementation libs.fastjson2
     implementation libs.hutool.all
     implementation libs.mikeiansky.utils.context
+    implementation 'commons-codec:commons-codec:1.15'
+
 
     implementation project(":mikeiansky-oauth2-model")
 
