@@ -17,6 +17,8 @@ public class AppSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.httpBasic(Customizer.withDefaults())
+//                .webAuthn(Customizer.withDefaults())
+//                .oneTimeTokenLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests ->authorizeRequests.anyRequest().authenticated())
         ;
         return http.build();
