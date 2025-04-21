@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public class RedisSecurityContextRepository implements SecurityContextRepository {
 
-    private static final String AUTHENTICATION_TOKEN_PREFIX = "auth_token";
+    private static final String AUTHENTICATION_TOKEN_PREFIX = "user_cookie";
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -31,6 +31,10 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
+        // 区分来源，如果是小程序
+        // 先看header 的 Authorization，再看cookie里面的数据
+        requestResponseHolder.getRequest().getHeader("Authorization");
+
         Cookie authTokenCookie = WebUtils.getCookie(requestResponseHolder.getRequest(), AUTHENTICATION_TOKEN_PREFIX);
         if (authTokenCookie == null) {
             return null;
