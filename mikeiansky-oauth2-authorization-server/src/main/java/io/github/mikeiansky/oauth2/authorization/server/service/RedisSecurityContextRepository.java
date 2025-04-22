@@ -42,6 +42,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
+        // 登录的token ，如果用header里面的话，需要使用X-Login-Token，避免使用OAuth2规范的Authorization的Basic和Bearer token
         Cookie authTokenCookie = WebUtils.getCookie(requestResponseHolder.getRequest(), LOGIN_TOKEN_COOKIE_KEY);
         if (authTokenCookie == null) {
             return null;
