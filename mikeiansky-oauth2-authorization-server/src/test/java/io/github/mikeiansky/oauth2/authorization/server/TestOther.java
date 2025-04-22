@@ -5,8 +5,10 @@ import cn.hutool.core.lang.ObjectId;
 import cn.hutool.core.util.IdUtil;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import java.util.UUID;
 
 /**
  * @author mike ian
@@ -37,6 +39,20 @@ public class TestOther {
         return Long.parseLong(decrypted);
     }
 
+    public static String generateToken(String userId, String salt) throws Exception {
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        long timestamp = System.currentTimeMillis();
+
+        String data = uuid + userId + timestamp;
+
+        Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
+        SecretKeySpec keySpec = new SecretKeySpec(salt.getBytes(), "HmacSHA256");
+        hmacSHA256.init(keySpec);
+
+        byte[] hmac = hmacSHA256.doFinal(data.getBytes());
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(hmac);
+    }
+
     public static void main(String[] args) throws Exception {
         long originalId = 1234567890L;
         String encrypted = encrypt(originalId);
@@ -45,6 +61,9 @@ public class TestOther {
         System.out.println("原始ID: " + originalId);
         System.out.println("加密后: " + encrypted);
         System.out.println("解密后: " + decrypted);
+
+        String token2 = generateToken(String.valueOf(originalId), "mySecretSalt");
+        System.out.println("token2: " + token2);
     }
 
 }

@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.util.WebUtils;
@@ -17,7 +18,13 @@ import java.util.UUID;
 
 public class RedisSecurityContextRepository implements SecurityContextRepository {
 
-    private static final String AUTHENTICATION_TOKEN_PREFIX = "user_cookie";
+    private static final String LOGIN_TOKEN_COOKIE_KEY = "login_token";
+
+    private static final String SERVER_REDIS_KEY_PREFIX = "oauth2:server";
+
+    public static final String LOGIN_TOKEN_REDIS_KEY = "login:token";
+
+    public static final String LOGIN_USER_REDIS_KEY = "login:user";
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -25,21 +32,21 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         this.redisTemplate = redisTemplate;
     }
 
-    public static String generateAuthTokenKey(String key){
-        return String.join(":", AUTHENTICATION_TOKEN_PREFIX, key);
+    public static String getLoginTokenKey(String key) {
+        return String.join(":", SERVER_REDIS_KEY_PREFIX, LOGIN_TOKEN_REDIS_KEY, key);
+    }
+
+    public static String getLoginUserRedisKey(String userId, String channel) {
+        return String.join(":", SERVER_REDIS_KEY_PREFIX, LOGIN_USER_REDIS_KEY, String.valueOf(userId), channel);
     }
 
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
-        // 区分来源，如果是小程序
-        // 先看header 的 Authorization，再看cookie里面的数据
-        requestResponseHolder.getRequest().getHeader("Authorization");
-
-        Cookie authTokenCookie = WebUtils.getCookie(requestResponseHolder.getRequest(), AUTHENTICATION_TOKEN_PREFIX);
+        Cookie authTokenCookie = WebUtils.getCookie(requestResponseHolder.getRequest(), LOGIN_TOKEN_COOKIE_KEY);
         if (authTokenCookie == null) {
             return null;
         }
-        Object cache = redisTemplate.opsForValue().get(generateAuthTokenKey(authTokenCookie.getValue()));
+        Object cache = redisTemplate.opsForValue().get(getLoginTokenKey(authTokenCookie.getValue()));
         if (cache == null) {
             return null;
         }
@@ -51,15 +58,27 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        String authToken = UUID.randomUUID().toString();
-        int durationDay = 30;
-        Cookie cookie = new Cookie(AUTHENTICATION_TOKEN_PREFIX, authToken);
+        String loginToken = UUID.randomUUID().toString();
+        // 有效的时间
+        int durationDay = 7;
+        Cookie cookie = new Cookie(LOGIN_TOKEN_COOKIE_KEY, loginToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge((int) Duration.ofDays(durationDay).getSeconds()); // 设置 7 天有效
+        cookie.setMaxAge((int) Duration.ofDays(durationDay).getSeconds());
         response.addCookie(cookie);
-        String authentication = JSON.toJSONString(context.getAuthentication());
-        redisTemplate.opsForValue().set(generateAuthTokenKey(authToken), authentication, Duration.ofDays(durationDay));
+        Authentication authentication = context.getAuthentication();
+        String userId = null;
+        if (authentication.getPrincipal() instanceof User user) {
+            userId = user.getUsername();
+        }
+        String authenticationJson = JSON.toJSONString(context.getAuthentication());
+        String loginUserKey = getLoginUserRedisKey(userId, "pc");
+        Object loginTokenCache = redisTemplate.opsForValue().get(loginUserKey);
+        if (loginTokenCache != null) {
+            redisTemplate.delete(getLoginTokenKey(loginTokenCache.toString()));
+        }
+        redisTemplate.opsForValue().set(loginUserKey, loginToken, Duration.ofDays(durationDay));
+        redisTemplate.opsForValue().set(getLoginTokenKey(loginToken), authenticationJson, Duration.ofDays(durationDay));
     }
 
     @Override
