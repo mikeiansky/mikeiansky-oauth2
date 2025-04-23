@@ -71,6 +71,11 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
     @Override
     public void save(OAuth2Authorization authorization) {
+
+//        authorization.getToken();
+
+        authorization.getRegisteredClientId();
+
         log.info("save authorization: {} ", JSON.toJSONString(authorization));
         OAuth2AuthorizationEntity entity = new OAuth2AuthorizationEntity();
         entity.setId(authorization.getId());
@@ -85,6 +90,15 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         String requestKey = "request:" + entity.getId();
         OAuth2AuthorizationRequestEntity request = toAuthorizationRequestEntity(authorization);
         redisTemplate.opsForValue().set(requestKey, JSON.toJSONString(request));
+
+        // 保存各类token,并且将各类token与最终的token进行关联
+        // 保存state
+        // setIfAbsent
+
+        // state, md5, id -> invalidate
+        // access token, md5
+        // code token, md5
+        // refresh token, md5
     }
 
     @Override
@@ -100,6 +114,9 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     @Override
     public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
         log.info("findByToken token: {}, tokenType: {}", token, tokenType.getValue());
+
+        // 如果是accessToken的类型是jwt
+
         String authorizationKey = "state:" + token;
         Object stateCache = redisTemplate.opsForValue().get(authorizationKey);
         if (stateCache == null) {
@@ -114,11 +131,15 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         OAuth2AuthorizationRequestEntity requestEntity = JSON.parseObject(requestCache.toString(), OAuth2AuthorizationRequestEntity.class);
         OAuth2AuthorizationRequest request = toAuthorizationRequest(requestEntity);
 
+        // find client
+
         RegisteredClient client = RegisteredClient.withId(requestEntity.getClientId())
                 .clientId(requestEntity.getClientId())
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri(requestEntity.getRedirectUri())
                 .build();
+
+//        OAuth2Authorization.Builder();
 
         OAuth2Authorization result = OAuth2Authorization.withRegisteredClient(client)
                 .id(authorizationEntity.getId())
@@ -127,6 +148,9 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 .authorizedScopes(Set.of(authorizationEntity.getAuthorizedScopes().split(",")))
                 .attribute(OAuth2AuthorizationRequest.class.getName(), request)
                 .build();
+
+        // 如果是查询的 state 则要删除对应的，只能用一次
+//        redisTemplate.opsForValue().getAndDelete(authorizationKey);
 
         return result;
     }
