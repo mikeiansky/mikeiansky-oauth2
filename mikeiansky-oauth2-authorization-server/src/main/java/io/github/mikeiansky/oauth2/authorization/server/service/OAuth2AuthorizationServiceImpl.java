@@ -175,7 +175,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
     @Override
     public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
-        log.info("findByToken token: {}, tokenType: {}", token, tokenType.getValue());
+        log.info("findByToken token: {}, tokenType: {}", token, tokenType !=null ? tokenType.getValue() : null);
 
         String authorizeId = null;
         Object authorizeIdCache = null;

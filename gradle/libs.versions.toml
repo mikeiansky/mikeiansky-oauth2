@@ -9,7 +9,7 @@ mybatis-plus-generator = { module = "com.baomidou:mybatis-plus-generator", versi
 mybatis-plus-extension = { module = "com.baomidou:mybatis-plus-extension", version.ref = "mybatisPlus" }
 mybatis-plus-spring-boot3-starter = { module = "com.baomidou:mybatis-plus-spring-boot3-starter", version.ref = "mybatisPlus" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
-fastjson2 = "com.alibaba:fastjson:2.0.31"
+fastjson2 = "com.alibaba:fastjson:2.0.42"
 hutool-all= 'cn.hutool:hutool-all:5.8.16'
 mikeiansky-obj-validator= 'io.github.mikeiansky:mikeiansky-obj-validator:1.0.6'
 mikeiansky-utils-context= 'io.github.mikeiansky:mikeiansky-utils-context:1.0.6'

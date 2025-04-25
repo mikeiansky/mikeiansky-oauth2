@@ -21,13 +21,21 @@ public class OAuth2ResourceServerController {
         return String.format("Hello, %s!", jwt.getSubject());
     }
 
+    @GetMapping("/hello")
+    public String hello() {
+        System.out.println("get hello api");
+        return "hello resource server";
+    }
+
     @GetMapping("/message")
     public String message() {
+        System.out.println("hello message");
         return "secret message";
     }
 
     @PostMapping("/message")
     public String createMessage(@RequestBody String message) {
+        System.out.println("create message");
         return String.format("Message was created. Content: %s", message);
     }
 
