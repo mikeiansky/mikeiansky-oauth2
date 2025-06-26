@@ -211,7 +211,8 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             log.error("find authorization cache is null");
             return null;
         }
-        OAuth2AuthorizationEntity authorizationEntity = JSON.parseObject(authorizationCache.toString(), OAuth2AuthorizationEntity.class);
+        OAuth2AuthorizationEntity authorizationEntity = JSON.parseObject(authorizationCache.toString(),
+                OAuth2AuthorizationEntity.class);
 
         RegisteredClient client = RegisteredClient.withId(authorizationEntity.getRegisteredClientId())
                 .clientId(authorizationEntity.getRegisteredClientId())

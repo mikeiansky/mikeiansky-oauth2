@@ -64,6 +64,7 @@ public class OAuth2LoginController {
         model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
         model.addAttribute("userAttributes", oauth2User.getAttributes());
 
+
         System.out.println("== start oauth2 user == ");
         System.out.println("oauth2 user class : " + oauth2User.getClass());
         System.out.println(JSON.toJSONString(oauth2User));
