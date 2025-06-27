@@ -1,11 +1,10 @@
 package io.github.mikeiansky.oauth2.authorization.server.service;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson2.JSON;
 import io.github.mikeiansky.oauth2.authorization.server.config.RedisConfig;
-import io.github.mikeiansky.oauth2.authorization.server.model.entity.OAuth2AuthorizationEntity;
-import io.github.mikeiansky.oauth2.authorization.server.model.entity.OAuth2AuthorizationRequestEntity;
-import io.github.mikeiansky.oauth2.authorization.server.model.entity.PrincipalHolder;
+import io.github.mikeiansky.oauth2.authorization.server.model.entity.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,7 +24,6 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -52,46 +50,46 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     public void save(OAuth2Authorization authorization) {
         log.info("save authorization: {} ", JSON.toJSONString(authorization));
 
-        String authorizeId = authorization.getId();
+        String authorizationId = authorization.getId();
 
-        OAuth2AuthorizationEntity entity = new OAuth2AuthorizationEntity();
+        Authorization entity = new Authorization();
         entity.setId(authorization.getId());
         entity.setRegisteredClientId(authorization.getRegisteredClientId());
         entity.setPrincipalName(authorization.getPrincipalName());
         entity.setAuthorizationGrantType(authorization.getAuthorizationGrantType().getValue());
 
-        MD5 md5 = MD5.create();
         // authorization code request consent state
         String state = authorization.getAttribute(OAuth2ParameterNames.STATE);
         if (state != null) {
-            String stateKey = RedisConfig.getAuthorizeStateKey(state);
-            redisTemplate.opsForValue().set(stateKey, authorizeId, 60, TimeUnit.MINUTES);
+            String stateKey = RedisConfig.getAuthorizationStateKey(state);
+            redisTemplate.opsForValue().set(stateKey, authorizationId, 5, TimeUnit.MINUTES);
             entity.setState(state);
         }
 
         // authorization code token
         OAuth2Authorization.Token<OAuth2AuthorizationCode> codeToken = authorization.getToken(OAuth2AuthorizationCode.class);
         if (codeToken != null) {
-            String codeTokenMd5 = md5.digestHex(codeToken.getToken().getTokenValue());
-            String codeTokenKey = RedisConfig.getAuthorizeCodeKey(codeTokenMd5);
+            String codeTokenId = MD5.create().digestHex(codeToken.getToken().getTokenValue(), "UTF-8");
+            AuthorizationCode code = new AuthorizationCode();
+            code.setAuthorizationId(authorizationId);
+            code.setValue(codeToken.getToken().getTokenValue());
+            code.setIssuedAt(codeToken.getToken().getIssuedAt());
+            code.setExpiresAt(codeToken.getToken().getExpiresAt());
+            code.setMetadata(JSON.toJSONString(codeToken.getMetadata()));
+
+            String codeTokenKey = RedisConfig.getAuthorizationCodeKey(codeTokenId);
             Instant now = Instant.now();
             long diffSecond = codeToken.getToken().getExpiresAt().getEpochSecond() - now.getEpochSecond();
-
             if (diffSecond > 0) {
-                redisTemplate.opsForValue().set(codeTokenKey, authorizeId, diffSecond, TimeUnit.SECONDS);
+                redisTemplate.opsForValue().set(codeTokenKey, JSON.toJSONString(code), diffSecond, TimeUnit.SECONDS);
             }
-
-            entity.setAuthorizationCodeValue(codeToken.getToken().getTokenValue());
-            entity.setAuthorizationCodeIssuedAt(codeToken.getToken().getIssuedAt());
-            entity.setAuthorizationCodeExpiresAt(codeToken.getToken().getExpiresAt());
-            entity.setAuthorizationCodeMetadata(JSON.toJSONString(codeToken.getMetadata()));
         }
 
         // authorization code request
         OAuth2AuthorizationRequest authorizationRequest = authorization.getAttribute(OAuth2AuthorizationRequest.class.getName());
         if (authorizationRequest != null) {
-            String authorizeRequestKey = RedisConfig.getAuthorizeRequestKey(authorizeId);
-            OAuth2AuthorizationRequestEntity authorizationRequestEntity = new OAuth2AuthorizationRequestEntity();
+            String authorizeRequestKey = RedisConfig.getAuthorizationRequestKey(authorizationId);
+            AuthorizationRequest authorizationRequestEntity = new AuthorizationRequest();
             authorizationRequestEntity.setAuthorizationRequestUri(authorizationRequest.getAuthorizationRequestUri());
             authorizationRequestEntity.setAuthorizationUri(authorizationRequest.getAuthorizationUri());
             authorizationRequestEntity.setRedirectUri(authorizationRequest.getRedirectUri());
@@ -105,38 +103,41 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             if (authorizationRequest.getScopes() != null) {
                 entity.setAuthorizedScopes(String.join(",", authorizationRequest.getScopes()));
             }
-            redisTemplate.opsForValue().set(authorizeRequestKey, JSON.toJSONString(authorizationRequestEntity), 60, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(authorizeRequestKey, JSON.toJSONString(authorizationRequestEntity), 5, TimeUnit.MINUTES);
 
-            String authorizePrincipalKey = RedisConfig.getAuthorizePrincipalKey(authorizeId);
-            Authentication principal = authorization.getAttribute(Principal.class.getName());
-            PrincipalHolder principalHolder = new PrincipalHolder();
+            String authorizePrincipalKey = RedisConfig.getAuthorizationPrincipalKey(authorizationId);
+            Authentication principal = authorization.getAttribute(java.security.Principal.class.getName());
+            Principal principalHolder = new Principal();
             principalHolder.setAuthorities(principal.getAuthorities().stream().map(String::valueOf).collect(Collectors.toSet()));
             principalHolder.setName(principal.getName());
-            redisTemplate.opsForValue().set(authorizePrincipalKey, JSON.toJSONString(principalHolder), 60, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(authorizePrincipalKey, JSON.toJSONString(principalHolder), 5, TimeUnit.MINUTES);
         }
 
         // access token
         OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getToken(OAuth2AccessToken.class);
         if (accessToken != null) {
-            String accessTokenMd5 = md5.digestHex(accessToken.getToken().getTokenValue());
-            String accessTokenKey = RedisConfig.getAccessTokenKey(accessTokenMd5);
-            redisTemplate.opsForValue().set(accessTokenKey, authorizeId);
+            String accessTokenId = IdUtil.fastSimpleUUID();
+            AccessToken token = new AccessToken();
+            token.setId(accessTokenId);
+            token.setAuthorizationId(authorizationId);
+            token.setValue(accessToken.getToken().getTokenValue());
+            token.setIssuedAt(accessToken.getToken().getIssuedAt());
+            token.setExpiresAt(accessToken.getToken().getExpiresAt());
+            token.setTokenType(accessToken.getToken().getTokenType());
+            token.setScopes(accessToken.getToken().getScopes());
+            token.setMetadata(JSON.toJSONString(accessToken.getMetadata()));
+            token.setGrantType(authorization.getAuthorizationGrantType());
 
-            entity.setAccessTokenValue(accessToken.getToken().getTokenValue());
-            entity.setAccessTokenIssuedAt(accessToken.getToken().getIssuedAt());
-            entity.setAccessTokenExpiresAt(accessToken.getToken().getExpiresAt());
-            entity.setAccessTokenType(accessToken.getToken().getTokenType().getValue());
-            entity.setAccessTokenScopes(String.join(",", accessToken.getToken().getScopes()));
-            entity.setAccessTokenMetadata(JSON.toJSONString(accessToken.getMetadata()));
-
+            String accessTokenKey = RedisConfig.getAccessTokenKey(accessTokenId);
+            redisTemplate.opsForValue().set(accessTokenKey, JSON.toJSONString(token));
         }
 
         // refresh token
         OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getToken(OAuth2RefreshToken.class);
         if (refreshToken != null) {
-            String refreshTokenMd5 = md5.digestHex(refreshToken.getToken().getTokenValue());
-            String refreshTokenKey = RedisConfig.getRefreshTokenKey(refreshTokenMd5);
-            redisTemplate.opsForValue().set(refreshTokenKey, authorizeId);
+            String refreshTokenId = IdUtil.fastSimpleUUID();
+            String refreshTokenKey = RedisConfig.getRefreshTokenKey(refreshTokenId);
+            redisTemplate.opsForValue().set(refreshTokenKey, authorizationId);
 
             entity.setRefreshTokenValue(refreshToken.getToken().getTokenValue());
             entity.setRefreshTokenIssuedAt(refreshToken.getToken().getIssuedAt());
@@ -147,9 +148,9 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         // oidc id token
         OAuth2Authorization.Token<OidcIdToken> oidcIdToken = authorization.getToken(OidcIdToken.class);
         if (oidcIdToken != null) {
-            String oidcIdTokenMd5 = md5.digestHex(oidcIdToken.getToken().getTokenValue());
-            String oidcIdTokenKey = RedisConfig.getOidcIdTokenKey(oidcIdTokenMd5);
-            redisTemplate.opsForValue().set(oidcIdTokenKey, authorizeId);
+            String oidcIdTokenId = IdUtil.fastSimpleUUID();
+            String oidcIdTokenKey = RedisConfig.getOidcIdTokenKey(oidcIdTokenId);
+            redisTemplate.opsForValue().set(oidcIdTokenKey, authorizationId);
 
             entity.setOidcIdTokenValue(oidcIdToken.getToken().getTokenValue());
             entity.setOidcIdTokenIssuedAt(oidcIdToken.getToken().getIssuedAt());
@@ -159,7 +160,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         }
 
         // authorization info
-        String authorizeIdKey = RedisConfig.getAuthorizeIdKey(authorizeId);
+        String authorizeIdKey = RedisConfig.getAuthorizationIdKey(authorizationId);
         redisTemplate.opsForValue().set(authorizeIdKey, JSON.toJSONString(entity), Duration.ofDays(7));
     }
 
@@ -175,44 +176,71 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
     @Override
     public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
-        log.info("findByToken token: {}, tokenType: {}", token, tokenType !=null ? tokenType.getValue() : null);
-
+        log.info("findByToken token: {}, tokenType: {}", token, tokenType != null ? tokenType.getValue() : null);
         String authorizeId = null;
-        Object authorizeIdCache = null;
+        AuthorizationCode authorizationCode = null;
         if (tokenType == null) {
             tokenType = OAuth2TokenType.ACCESS_TOKEN;
         }
         if (OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
-            authorizeIdCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizeStateKey(token));
+            authorizeId = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationStateKey(token));
         } else if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-            String codeMd5 = MD5.create().digestHex(token);
-            authorizeIdCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizeCodeKey(codeMd5));
+            String codeTokenId = MD5.create().digestHex(token);
+            String authorizationCodeContent = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationCodeKey(codeTokenId));
+            if (authorizationCodeContent == null) {
+                log.error("find authorizationCodeContent is null");
+                return null;
+            }
+            authorizationCode = JSON.parseObject(authorizationCodeContent, AuthorizationCode.class);
+            if (authorizationCode == null) {
+                log.error("find authorizationCode is null");
+                return null;
+            }
+            authorizeId = authorizationCode.getAuthorizationId();
         } else if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
-            String accessTokenMd5 = MD5.create().digestHex(token);
-            authorizeIdCache = redisTemplate.opsForValue().get(RedisConfig.getAccessTokenKey(accessTokenMd5));
+            AccessToken accessToken = JSON.parseObject(redisTemplate.opsForValue().get(RedisConfig.getAccessTokenKey(token)), AccessToken.class);
+            if (accessToken == null) {
+                log.error("find access token is null");
+                return null;
+            }
+            OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(RegisteredClient.withId(accessToken.getClientId()).build())
+                    .id(accessToken.getId())
+                    .principalName(accessToken.getPrincipalHolder().getName())
+                    .authorizationGrantType(accessToken.getGrantType())
+                    .authorizedScopes(accessToken.getScopes());
+            OAuth2AccessToken oAuth2AccessToken = new OAuth2AccessToken(
+                    OAuth2AccessToken.TokenType.BEARER,
+                    accessToken.getValue(),
+                    accessToken.getIssuedAt(),
+                    accessToken.getExpiresAt(),
+                    accessToken.getScopes());
+            authorizationBuilder.token(oAuth2AccessToken, metadata -> {
+                if (accessToken.getMetadata() != null) {
+                    metadata.putAll(JSON.parseObject(accessToken.getMetadata(), Map.class));
+                }
+            });
+            return authorizationBuilder.build();
         } else if (OidcParameterNames.ID_TOKEN.equals(tokenType.getValue())) {
-            String oidcIdTokenMd5 = MD5.create().digestHex(token);
-            authorizeIdCache = redisTemplate.opsForValue().get(RedisConfig.getOidcIdTokenKey(oidcIdTokenMd5));
+            authorizeId = redisTemplate.opsForValue().get(RedisConfig.getOidcIdTokenKey(token));
         } else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
-            String refreshTokenMd5 = MD5.create().digestHex(token);
-            authorizeIdCache = redisTemplate.opsForValue().get(RedisConfig.getRefreshTokenKey(refreshTokenMd5));
+            authorizeId = redisTemplate.opsForValue().get(RedisConfig.getRefreshTokenKey(token));
         } else if (OAuth2ParameterNames.DEVICE_CODE.equals(tokenType.getValue())) {
+            // TODO
         } else if (OAuth2ParameterNames.USER_CODE.equals(tokenType.getValue())) {
+            // TODO
         }
 
-        if (authorizeIdCache == null) {
+        if (authorizeId == null) {
             log.error("find authorize id is null");
             return null;
         }
 
-        authorizeId = authorizeIdCache.toString();
-        Object authorizationCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizeIdKey(authorizeId));
+        String authorizationCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationIdKey(authorizeId));
         if (authorizationCache == null) {
             log.error("find authorization cache is null");
             return null;
         }
-        OAuth2AuthorizationEntity authorizationEntity = JSON.parseObject(authorizationCache.toString(),
-                OAuth2AuthorizationEntity.class);
+        Authorization authorizationEntity = JSON.parseObject(authorizationCache, Authorization.class);
 
         RegisteredClient client = RegisteredClient.withId(authorizationEntity.getRegisteredClientId())
                 .clientId(authorizationEntity.getRegisteredClientId())
@@ -227,10 +255,10 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 .authorizedScopes(Set.of(authorizationEntity.getAuthorizedScopes().split(",")));
 
         // authorization request
-        Object authorizationRequestCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizeRequestKey(authorizeId));
+        String authorizationRequestCache = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationRequestKey(authorizeId));
         OAuth2AuthorizationRequest authorizationRequest = null;
         if (authorizationRequestCache != null) {
-            OAuth2AuthorizationRequestEntity authorizationRequestEntity = JSON.parseObject(authorizationRequestCache.toString(), OAuth2AuthorizationRequestEntity.class);
+            AuthorizationRequest authorizationRequestEntity = JSON.parseObject(authorizationRequestCache.toString(), AuthorizationRequest.class);
             authorizationRequest = OAuth2AuthorizationRequest.authorizationCode()
                     .clientId(authorizationRequestEntity.getClientId())
                     .state(authorizationRequestEntity.getState())
@@ -248,16 +276,16 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         }
 
         // principal
-        String authorizePrincipalKey = RedisConfig.getAuthorizePrincipalKey(authorizeId);
+        String authorizePrincipalKey = RedisConfig.getAuthorizationPrincipalKey(authorizeId);
         Object principalCache = redisTemplate.opsForValue().get(authorizePrincipalKey);
         if (principalCache != null) {
-            PrincipalHolder principalHolder = JSON.parseObject(principalCache.toString(), PrincipalHolder.class);
+            Principal principalHolder = JSON.parseObject(principalCache.toString(), Principal.class);
             UsernamePasswordAuthenticationToken authenticationToken = UsernamePasswordAuthenticationToken.authenticated(
                     principalHolder.getName(),
                     null,
                     principalHolder.getAuthorities().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet())
             );
-            authorizationBuilder.attribute(Principal.class.getName(), authenticationToken);
+            authorizationBuilder.attribute(java.security.Principal.class.getName(), authenticationToken);
         }
 
         // state
@@ -266,59 +294,17 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         }
 
         // code token
-        if (authorizationEntity.getAuthorizationCodeValue() != null) {
-            OAuth2AuthorizationCode authorizationCode = new OAuth2AuthorizationCode(
-                    authorizationEntity.getAuthorizationCodeValue(),
-                    authorizationEntity.getAuthorizationCodeIssuedAt(),
-                    authorizationEntity.getAuthorizationCodeExpiresAt()
+        if (authorizationCode != null) {
+            OAuth2AuthorizationCode codeToken = new OAuth2AuthorizationCode(
+                    authorizationCode.getValue(),
+                    authorizationCode.getIssuedAt(),
+                    authorizationCode.getExpiresAt()
             );
-            authorizationBuilder.token(authorizationCode, metadata -> {
-                if (authorizationEntity.getAuthorizationCodeMetadata() != null) {
-                    metadata.putAll(JSON.parseObject(authorizationEntity.getAuthorizationCodeMetadata(), Map.class));
+            AuthorizationCode finalAuthorizationCode = authorizationCode;
+            authorizationBuilder.token(codeToken, metadata -> {
+                if (finalAuthorizationCode.getMetadata() != null) {
+                    metadata.putAll(JSON.parseObject(finalAuthorizationCode.getMetadata(), Map.class));
                 }
-            });
-        }
-
-        // access token
-        if (authorizationEntity.getAccessTokenValue() != null) {
-            OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                    OAuth2AccessToken.TokenType.BEARER,
-                    authorizationEntity.getAccessTokenValue(),
-                    authorizationEntity.getAccessTokenIssuedAt(),
-                    authorizationEntity.getAccessTokenExpiresAt(),
-                    authorizationEntity.getAccessTokenScopes() == null ? Set.of() : Set.of(authorizationEntity.getAccessTokenScopes().split(",")));
-            authorizationBuilder.token(accessToken, metadata -> {
-                if (authorizationEntity.getAccessTokenMetadata() != null) {
-                    metadata.putAll(JSON.parseObject(authorizationEntity.getAccessTokenMetadata(), Map.class));
-                }
-            });
-        }
-
-        // refresh token
-        if (authorizationEntity.getRefreshTokenValue() != null) {
-            OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(
-                    authorizationEntity.getRefreshTokenValue(),
-                    authorizationEntity.getRefreshTokenIssuedAt(),
-                    authorizationEntity.getRefreshTokenExpiresAt());
-            authorizationBuilder.token(refreshToken, metadata -> {
-                if (authorizationEntity.getRefreshTokenMetadata() != null) {
-                    metadata.putAll(JSON.parseObject(authorizationEntity.getRefreshTokenMetadata(), Map.class));
-                }
-            });
-        }
-
-        // oidc id token
-        if (authorizationEntity.getOidcIdTokenValue() != null) {
-            OidcIdToken oidcIdToken = new OidcIdToken(
-                    authorizationEntity.getOidcIdTokenValue(),
-                    authorizationEntity.getOidcIdTokenIssuedAt(),
-                    authorizationEntity.getOidcIdTokenExpiresAt(),
-                    JSON.parseObject(authorizationEntity.getOidcIdTokenClaims(), Map.class));
-            authorizationBuilder.token(oidcIdToken, metadata -> {
-                if (authorizationEntity.getOidcIdTokenMetadata() != null) {
-                    metadata.putAll(JSON.parseObject(authorizationEntity.getOidcIdTokenMetadata(), Map.class));
-                }
-                metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, oidcIdToken.getClaims());
             });
         }
 

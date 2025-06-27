@@ -10,7 +10,7 @@ import java.time.Instant;
  * @desc
  **/
 @Data
-public class OAuth2AuthorizationEntity {
+public class Authorization {
 
     private String id;
     private String registeredClientId;
@@ -18,40 +18,27 @@ public class OAuth2AuthorizationEntity {
     private String authorizationGrantType;
     private String authorizedScopes;
     private String attributes;
+
+    private Principal principalHolder;
+
+    // consent \ code \ state flow
     private String state;
 
-    private String authorizationCodeValue;
-    private Instant authorizationCodeIssuedAt;
-    private Instant authorizationCodeExpiresAt;
-    private String authorizationCodeMetadata;
-
+    // accessToken Info
     private String accessTokenId;
-    private String accessTokenValue;
-    private Instant accessTokenIssuedAt;
-    private Instant accessTokenExpiresAt;
-    private String accessTokenMetadata;
-    private String accessTokenType;
-    private String accessTokenScopes;
 
+    // refreshToken Info
     private String refreshTokenValue;
     private Instant refreshTokenIssuedAt;
     private Instant refreshTokenExpiresAt;
     private String refreshTokenMetadata;
 
+    // oidcIdToken Info
     private String oidcIdTokenValue;
     private Instant oidcIdTokenIssuedAt;
     private Instant oidcIdTokenExpiresAt;
     private String oidcIdTokenMetadata;
     private String oidcIdTokenClaims;
 
-    private String userCodeValue;
-    private Instant userCodeIssuedAt;
-    private Instant userCodeExpiresAt;
-    private String userCodeMetadata;
-
-    private String deviceCodeValue;
-    private Instant deviceCodeIssuedAt;
-    private Instant deviceCodeExpiresAt;
-    private String deviceCodeMetadata;
 
 }

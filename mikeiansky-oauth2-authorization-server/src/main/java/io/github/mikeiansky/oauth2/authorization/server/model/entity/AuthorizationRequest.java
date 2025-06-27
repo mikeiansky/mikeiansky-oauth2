@@ -10,7 +10,7 @@ import java.util.Map;
  * @desc
  **/
 @Data
-public class OAuth2AuthorizationRequestEntity {
+public class AuthorizationRequest {
 
     private String authorizationRequestUri;
     private String authorizationUri;
@@ -22,5 +22,6 @@ public class OAuth2AuthorizationRequestEntity {
     private String state;
     private Map<String, Object> attributes;
     private Map<String, Object> additionalParameters;
+    private Principal principalHolder;
 
 }
