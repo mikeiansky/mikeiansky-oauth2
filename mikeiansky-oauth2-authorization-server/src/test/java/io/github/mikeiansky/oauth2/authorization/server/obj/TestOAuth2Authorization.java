@@ -26,6 +26,11 @@ public class TestOAuth2Authorization {
 
 //        OAuth2Authorization authorization = new OAuth2Authorization();
 
+        OAuth2Authorization authorization2 = OAuth2Authorization.from(null)
+                .invalidate(null)
+                .build();
+
+
         RegisteredClient client = RegisteredClient.withId("test0-01")
                 .clientId("client0")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
