@@ -37,9 +37,9 @@ public class AppConfig {
 //                        new AntPathRequestMatcher("/login"),       // 登录页面
 //                        new AntPathRequestMatcher("/logout")       // 登出端点
 //                ))
-//                .with(authorizationServerConfigurer, authorizationServer -> {
-//                    authorizationServer.oidc(Customizer.withDefaults());
-//                })
+                .with(authorizationServerConfigurer, authorizationServer -> {
+                    authorizationServer.oidc(Customizer.withDefaults());
+                })
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/login").permitAll();
                 })
@@ -62,6 +62,7 @@ public class AppConfig {
                     exception.authenticationEntryPoint((request, response, authException) -> {
                         log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
                         authException.printStackTrace();
+                        // 如果是移动端这返回错误
                         response.sendRedirect(request.getContextPath() + "/login");
                     });
                 })

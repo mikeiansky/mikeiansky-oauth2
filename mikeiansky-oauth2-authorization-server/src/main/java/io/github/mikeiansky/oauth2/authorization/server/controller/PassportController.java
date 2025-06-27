@@ -12,12 +12,18 @@ import org.springframework.web.bind.annotation.GetMapping;
  **/
 @Slf4j
 @Controller
-public class LoginController {
+public class PassportController {
 
     @GetMapping("login")
-    public String loginPage(){
+    public String login(){
         log.info("welcome to hello page ... ");
         return "login";
+    }
+
+    @GetMapping()
+    public String sendMobile(){
+
+        return "mobile";
     }
 
 }
