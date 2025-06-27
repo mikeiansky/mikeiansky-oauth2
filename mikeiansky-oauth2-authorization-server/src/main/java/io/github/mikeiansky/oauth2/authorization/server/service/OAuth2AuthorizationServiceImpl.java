@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -61,15 +62,18 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         // authorization code request consent state
         String state = authorization.getAttribute(OAuth2ParameterNames.STATE);
         if (state != null) {
-            String stateKey = RedisConfig.getAuthorizationStateKey(state);
+            String stateId = MD5.create().digestHex(state, StandardCharsets.UTF_8);
+            String stateKey = RedisConfig.getAuthorizationStateKey(stateId);
             redisTemplate.opsForValue().set(stateKey, authorizationId, 5, TimeUnit.MINUTES);
             entity.setState(state);
+        } else {
+            // 删除对应的 state TODO
         }
 
         // authorization code token
         OAuth2Authorization.Token<OAuth2AuthorizationCode> codeToken = authorization.getToken(OAuth2AuthorizationCode.class);
         if (codeToken != null) {
-            String codeTokenId = MD5.create().digestHex(codeToken.getToken().getTokenValue(), "UTF-8");
+            String codeTokenId = MD5.create().digestHex(codeToken.getToken().getTokenValue(), StandardCharsets.UTF_8);
             AuthorizationCode code = new AuthorizationCode();
             code.setAuthorizationId(authorizationId);
             code.setValue(codeToken.getToken().getTokenValue());
@@ -183,9 +187,10 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             tokenType = OAuth2TokenType.ACCESS_TOKEN;
         }
         if (OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
-            authorizeId = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationStateKey(token));
+            String stateId = MD5.create().digestHex(token, StandardCharsets.UTF_8);
+            authorizeId = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationStateKey(stateId));
         } else if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-            String codeTokenId = MD5.create().digestHex(token);
+            String codeTokenId = MD5.create().digestHex(token, StandardCharsets.UTF_8);
             String authorizationCodeContent = redisTemplate.opsForValue().get(RedisConfig.getAuthorizationCodeKey(codeTokenId));
             if (authorizationCodeContent == null) {
                 log.error("find authorizationCodeContent is null");
