@@ -65,7 +65,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         String state = authorization.getAttribute(OAuth2ParameterNames.STATE);
         if (state != null) {
             String stateKey = AppRedisKeyConfig.getAuthorizeStateKey(state);
-            redisTemplate.opsForValue().set(stateKey, authorizeId, 5, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(stateKey, authorizeId, 60, TimeUnit.MINUTES);
             entity.setState(state);
         }
 
@@ -105,14 +105,14 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             if (authorizationRequest.getScopes() != null) {
                 entity.setAuthorizedScopes(String.join(",", authorizationRequest.getScopes()));
             }
-            redisTemplate.opsForValue().set(authorizeRequestKey, JSON.toJSONString(authorizationRequestEntity), 5, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(authorizeRequestKey, JSON.toJSONString(authorizationRequestEntity), 60, TimeUnit.MINUTES);
 
             String authorizePrincipalKey = AppRedisKeyConfig.getAuthorizePrincipalKey(authorizeId);
             Authentication principal = authorization.getAttribute(Principal.class.getName());
             PrincipalHolder principalHolder = new PrincipalHolder();
             principalHolder.setAuthorities(principal.getAuthorities().stream().map(String::valueOf).collect(Collectors.toSet()));
             principalHolder.setName(principal.getName());
-            redisTemplate.opsForValue().set(authorizePrincipalKey, JSON.toJSONString(principalHolder), 5, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(authorizePrincipalKey, JSON.toJSONString(principalHolder), 60, TimeUnit.MINUTES);
         }
 
         // access token
