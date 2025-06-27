@@ -1,13 +1,12 @@
 package io.github.mikeiansky.oauth2.authorization.server.service;
 
 import com.alibaba.fastjson2.JSON;
-import io.github.mikeiansky.oauth2.authorization.server.config.AppRedisKeyConfig;
+import io.github.mikeiansky.oauth2.authorization.server.config.RedisConfig;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,9 +23,9 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
 
     private static final String LOGIN_TOKEN_COOKIE_KEY = "login_token";
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public RedisSecurityContextRepository(RedisTemplate<String, Object> redisTemplate) {
+    public RedisSecurityContextRepository(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -37,7 +36,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         if (authTokenCookie == null) {
             return null;
         }
-        Object cache = redisTemplate.opsForValue().get(AppRedisKeyConfig.getLoginTokenKey(authTokenCookie.getValue()));
+        Object cache = redisTemplate.opsForValue().get(RedisConfig.getLoginTokenKey(authTokenCookie.getValue()));
         if (cache == null) {
             return null;
         }
@@ -67,13 +66,14 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
             userId = user.getUsername();
         }
         String authenticationJson = JSON.toJSONString(context.getAuthentication());
-        String loginUserKey = AppRedisKeyConfig.getLoginUserKey(userId, "pc");
-        Object loginTokenCache = redisTemplate.opsForValue().get(loginUserKey);
+        String loginUserKey = RedisConfig.getLoginUserKey(userId, "pc");
+        String loginTokenCache = redisTemplate.opsForValue().get(loginUserKey);
         if (loginTokenCache != null) {
-            redisTemplate.delete(AppRedisKeyConfig.getLoginTokenKey(loginTokenCache.toString()));
+            // 删除重复的旧的token，同客户端需要互踢下线
+            redisTemplate.delete(RedisConfig.getLoginTokenKey(loginTokenCache));
         }
         redisTemplate.opsForValue().set(loginUserKey, loginToken, Duration.ofDays(durationDay));
-        redisTemplate.opsForValue().set(AppRedisKeyConfig.getLoginTokenKey(loginToken), authenticationJson, Duration.ofDays(durationDay));
+        redisTemplate.opsForValue().set(RedisConfig.getLoginTokenKey(loginToken), authenticationJson, Duration.ofDays(durationDay));
     }
 
     @Override

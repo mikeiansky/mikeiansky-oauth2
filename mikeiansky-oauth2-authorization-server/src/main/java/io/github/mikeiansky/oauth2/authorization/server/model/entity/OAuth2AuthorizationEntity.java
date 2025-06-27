@@ -25,6 +25,7 @@ public class OAuth2AuthorizationEntity {
     private Instant authorizationCodeExpiresAt;
     private String authorizationCodeMetadata;
 
+    private String accessTokenId;
     private String accessTokenValue;
     private Instant accessTokenIssuedAt;
     private Instant accessTokenExpiresAt;

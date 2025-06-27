@@ -10,17 +10,16 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.CookieRequestCache;
 
-
 /**
  * @author mike ian
  * @date 2025/3/21
- * @desc 应用Security配置
+ * @desc
  **/
 @Configuration
-public class AppSecurityConfig {
+public class AppConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, RedisTemplate<String, Object> redisTemplate) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, RedisTemplate<String, String> redisTemplate) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
         httpSecurity

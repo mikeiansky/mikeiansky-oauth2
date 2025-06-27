@@ -5,9 +5,17 @@ package io.github.mikeiansky.oauth2.authorization.server.config;
  * @date 2025/4/24
  * @desc
  **/
-public class AppRedisKeyConfig {
+public final class RedisConfig {
 
     private static final String OAUTH2_SERVER_PREFIX = "oauth2:server";
+
+    public static String getLoginTokenKey(String token) {
+        return String.format("%s:login:token:%s", OAUTH2_SERVER_PREFIX, token);
+    }
+
+    public static String getLoginUserKey(String user, String channel) {
+        return String.join("%s:login:user:%s:%s", OAUTH2_SERVER_PREFIX, channel, user);
+    }
 
     public static String getAuthorizeIdKey(String id) {
         return OAUTH2_SERVER_PREFIX + ":authorization:id:" + id;
@@ -41,12 +49,5 @@ public class AppRedisKeyConfig {
         return OAUTH2_SERVER_PREFIX + ":token:oidc_id_token:" + idToken;
     }
 
-    public static String getLoginTokenKey(String token) {
-        return OAUTH2_SERVER_PREFIX + ":login:token:" + token;
-    }
-
-    public static String getLoginUserKey(String user, String channel) {
-        return String.join(":", OAUTH2_SERVER_PREFIX, "login:user", user, channel);
-    }
 
 }
