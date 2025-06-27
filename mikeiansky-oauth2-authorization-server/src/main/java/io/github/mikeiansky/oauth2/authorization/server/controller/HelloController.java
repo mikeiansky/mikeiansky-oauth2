@@ -1,5 +1,6 @@
 package io.github.mikeiansky.oauth2.authorization.server.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2025/3/21
  * @desc
  **/
+@Slf4j
 @RequestMapping("hello")
 @RestController
 public class HelloController {
@@ -18,6 +20,12 @@ public class HelloController {
 
     public HelloController(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
+    }
+
+    @GetMapping("echo")
+    public String echo(String msg){
+        log.info("hello echo msg : {}", msg);
+        return "hello : " + msg;
     }
 
     @GetMapping("redis")

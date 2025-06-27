@@ -7,9 +7,9 @@ package io.github.mikeiansky.oauth2.authorization.server.config;
  **/
 public final class RedisConfig {
 
-    private static final String OAUTH2_SERVER_PREFIX = "oauth2:server";
+    private static final String DEFAULT_PREFIX = "oauth2:server";
 
-    private static String prefix = OAUTH2_SERVER_PREFIX;
+    private static String prefix = DEFAULT_PREFIX;
 
     public static void setPrefix(String prefix) {
         RedisConfig.prefix = prefix;
