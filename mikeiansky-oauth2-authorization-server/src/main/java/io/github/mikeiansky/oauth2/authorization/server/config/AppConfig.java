@@ -41,7 +41,9 @@ public class AppConfig {
                     authorizationServer.oidc(Customizer.withDefaults());
                 })
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/login").permitAll();
+                    auth.requestMatchers(
+                            "/passport/**",
+                            "/login").permitAll();
                 })
                 .requestCache(requestCache -> {
                     requestCache.requestCache(new CookieRequestCache());
@@ -63,7 +65,7 @@ public class AppConfig {
                         log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
                         authException.printStackTrace();
                         // 如果是移动端这返回错误
-                        response.sendRedirect(request.getContextPath() + "/login");
+                        response.sendRedirect(request.getContextPath() + "/passport/login");
                     });
                 })
 //                .addFilterBefore(new LoginFilter(), UsernamePasswordAuthenticationFilter.class)
