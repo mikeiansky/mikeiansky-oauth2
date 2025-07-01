@@ -47,7 +47,7 @@
 
 <h2>手机号登录 / 注册</h2>
 
-<form th:action="@{/passport/login}" method="post">
+<form action="/passport/login" method="post">
     <!-- 添加 CSRF Token -->
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 

@@ -1,5 +1,7 @@
 package io.github.mikeiansky.oauth2.authorization.server.config;
 
+import io.github.mikeiansky.oauth2.authorization.server.filter.LoginPageFilter;
+import io.github.mikeiansky.oauth2.authorization.server.filter.SendCodeFilter;
 import io.github.mikeiansky.oauth2.authorization.server.service.RedisSecurityContextRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -10,12 +12,16 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.savedrequest.CookieRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.thymeleaf.TemplateEngine;
 
 /**
  * @author mike ian
@@ -27,24 +33,34 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class AppConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, RedisTemplate<String, String> redisTemplate) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
+                                                   RedisTemplate<String, String> redisTemplate,
+                                                   TemplateEngine templateEngine) throws Exception {
+
+        System.out.println("templateEngine ::: " + templateEngine);
+
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
+
+        SendCodeFilter sendCodeFilter = new SendCodeFilter();
+        LoginPageFilter loginPageFilter = new LoginPageFilter(templateEngine);
+
         httpSecurity
-                .csrf(csrf -> csrf.disable())
-//                .csrf(csrf -> csrf.ignoringRequestMatchers(
-//                        new AntPathRequestMatcher("/oauth2/**"),   // 授权端点
-//                        new AntPathRequestMatcher("/login"),       // 登录页面
-//                        new AntPathRequestMatcher("/logout")       // 登出端点
-//                ))
+//                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                        new AntPathRequestMatcher("/oauth2/**"),   // 授权端点
+                        new AntPathRequestMatcher("/passport/**"),   // passport 端点
+                        new AntPathRequestMatcher("/login"),       // 登录页面
+                        new AntPathRequestMatcher("/logout")       // 登出端点
+                ))
                 .with(authorizationServerConfigurer, authorizationServer -> {
                     authorizationServer.oidc(Customizer.withDefaults());
                 })
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(
-                            "/passport/**",
-                            "/login").permitAll();
-                })
+//                .authorizeHttpRequests(auth -> {
+//                    auth.requestMatchers(
+//                            "/passport/**",
+//                            "/login").permitAll();
+//                })
                 .requestCache(requestCache -> {
                     requestCache.requestCache(new CookieRequestCache());
                 })
@@ -59,15 +75,18 @@ public class AppConfig {
                 .rememberMe(remember -> {
                     remember.key("remember-me");
                 })
-                .exceptionHandling(exception -> {
-                    log.info("exceptionHandling ::: exp {}", exception);
-                    exception.authenticationEntryPoint((request, response, authException) -> {
-                        log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
-                        authException.printStackTrace();
-                        // 如果是移动端这返回错误
-                        response.sendRedirect(request.getContextPath() + "/passport/login");
-                    });
-                })
+                .addFilterAfter(sendCodeFilter, LogoutFilter.class)
+                .addFilterAfter(loginPageFilter, SendCodeFilter.class)
+
+//                .exceptionHandling(exception -> {
+//                    log.info("exceptionHandling ::: exp {}", exception);
+//                    exception.authenticationEntryPoint((request, response, authException) -> {
+//                        log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
+//                        authException.printStackTrace();
+//                        // 如果是移动端这返回错误
+//                        response.sendRedirect(request.getContextPath() + "/passport/login");
+//                    });
+//                })
 //                .addFilterBefore(new LoginFilter(), UsernamePasswordAuthenticationFilter.class)
 //                .addFilterBefore(new LoginPageFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
