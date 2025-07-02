@@ -30,15 +30,14 @@ public class AppConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
                                                    RedisTemplate<String, String> redisTemplate,
                                                    TemplateEngine templateEngine) throws Exception {
-
-        System.out.println("templateEngine ::: " + templateEngine);
-
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
+        RedisSecurityContextRepository redisSecurityContextRepository = new RedisSecurityContextRepository(redisTemplate);
+        CookieRequestCache requestCache = new CookieRequestCache();
         SendCodeFilter sendCodeFilter = new SendCodeFilter(redisTemplate);
         LoginPageFilter loginPageFilter = new LoginPageFilter(templateEngine);
-        LoginFilter loginFilter = new LoginFilter(redisTemplate);
+        LoginFilter loginFilter = new LoginFilter(redisTemplate, redisSecurityContextRepository, requestCache);
 
         httpSecurity
                 .csrf(csrf -> csrf.ignoringRequestMatchers(
@@ -50,11 +49,11 @@ public class AppConfig {
                 .with(authorizationServerConfigurer, authorizationServer -> {
                     authorizationServer.oidc(Customizer.withDefaults());
                 })
-                .requestCache(requestCache -> {
-                    requestCache.requestCache(new CookieRequestCache());
+                .requestCache(requestCacheConfigurer -> {
+                    requestCacheConfigurer.requestCache(requestCache);
                 })
                 .securityContext(securityContext -> {
-                    securityContext.securityContextRepository(new RedisSecurityContextRepository(redisTemplate));
+                    securityContext.securityContextRepository(redisSecurityContextRepository);
                 })
                 .authorizeHttpRequests(auth -> {
                     auth.anyRequest().authenticated();
@@ -66,16 +65,15 @@ public class AppConfig {
                 .addFilterAfter(sendCodeFilter, LogoutFilter.class)
                 .addFilterAfter(loginPageFilter, SendCodeFilter.class)
                 .addFilterAfter(loginFilter, LoginPageFilter.class)
-
-//                .exceptionHandling(exception -> {
-//                    log.info("exceptionHandling ::: exp {}", exception);
-//                    exception.authenticationEntryPoint((request, response, authException) -> {
-//                        log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
-//                        authException.printStackTrace();
-//                        // 如果是移动端这返回错误
-//                        response.sendRedirect(request.getContextPath() + "/passport/login");
-//                    });
-//                })
+                .exceptionHandling(exception -> {
+                    log.info("exceptionHandling ::: exp {}", exception);
+                    exception.authenticationEntryPoint((request, response, authException) -> {
+                        log.info("authenticationEntryPoint ::::::  + url : {}", request.getRequestURI());
+                        authException.printStackTrace();
+                        // 如果是移动端这返回错误
+                        response.sendRedirect(request.getContextPath() + "/passport/login");
+                    });
+                })
         ;
         return httpSecurity.build();
     }
