@@ -30,7 +30,7 @@ public class LoginPageFilter extends OncePerRequestFilter {
         log.info("login page filter : {}", request.getRequestURI());
         // Check if the request is for the login page
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/passport/login")) {
+        if (requestURI.equals("/passport/login") && request.getMethod().equalsIgnoreCase("GET")) {
             // If it is, set the response status to 200 OK
             response.setStatus(HttpServletResponse.SC_OK);
             // Optionally, you can also write a message to the response body

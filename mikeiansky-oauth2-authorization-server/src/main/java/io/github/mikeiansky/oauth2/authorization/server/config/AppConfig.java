@@ -1,5 +1,6 @@
 package io.github.mikeiansky.oauth2.authorization.server.config;
 
+import io.github.mikeiansky.oauth2.authorization.server.filter.LoginFilter;
 import io.github.mikeiansky.oauth2.authorization.server.filter.LoginPageFilter;
 import io.github.mikeiansky.oauth2.authorization.server.filter.SendCodeFilter;
 import io.github.mikeiansky.oauth2.authorization.server.service.RedisSecurityContextRepository;
@@ -37,6 +38,7 @@ public class AppConfig {
 
         SendCodeFilter sendCodeFilter = new SendCodeFilter(redisTemplate);
         LoginPageFilter loginPageFilter = new LoginPageFilter(templateEngine);
+        LoginFilter loginFilter = new LoginFilter(redisTemplate);
 
         httpSecurity
                 .csrf(csrf -> csrf.ignoringRequestMatchers(
@@ -63,6 +65,8 @@ public class AppConfig {
                 })
                 .addFilterAfter(sendCodeFilter, LogoutFilter.class)
                 .addFilterAfter(loginPageFilter, SendCodeFilter.class)
+                .addFilterAfter(loginFilter, LoginPageFilter.class)
+
 //                .exceptionHandling(exception -> {
 //                    log.info("exceptionHandling ::: exp {}", exception);
 //                    exception.authenticationEntryPoint((request, response, authException) -> {
