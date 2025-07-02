@@ -12,7 +12,7 @@ import lombok.Data;
  * @desc 发送验证码请求参数
  **/
 @Data
-public class SendCodeDTO {
+public class SendSmsCodeDTO {
 
     @Pattern(regexp = "(pc|web|h5|app|wechat)", message = "不合法的渠道")
     @NotEmpty(message = "渠道标识不能为空")

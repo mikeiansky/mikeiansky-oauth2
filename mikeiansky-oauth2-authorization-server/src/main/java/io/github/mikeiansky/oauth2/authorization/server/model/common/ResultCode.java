@@ -11,6 +11,7 @@ public enum ResultCode {
     OK(1, "success"),
     ERROR(0, "error"),
     INVALID_TOKEN(9, "invalid token"),
+    INVALID_REQUEST_PARAM(0, "Invalid request parameters"),
     LOGIN_ERROR(1001, "用户名密码错误"),
     PERMISSION_DENY(0, "当前用户无权限"),
     NO_LOGIN(0, "用户未登录"),

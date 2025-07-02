@@ -1,6 +1,5 @@
 package io.github.mikeiansky.oauth2.authorization.server.filter;
 
-import cn.hutool.extra.template.engine.thymeleaf.ThymeleafEngine;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

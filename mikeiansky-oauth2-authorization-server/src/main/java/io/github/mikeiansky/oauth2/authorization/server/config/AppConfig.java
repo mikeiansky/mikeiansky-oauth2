@@ -7,20 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.savedrequest.CookieRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.thymeleaf.TemplateEngine;
 
 /**
@@ -42,11 +35,10 @@ public class AppConfig {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
-        SendCodeFilter sendCodeFilter = new SendCodeFilter();
+        SendCodeFilter sendCodeFilter = new SendCodeFilter(redisTemplate);
         LoginPageFilter loginPageFilter = new LoginPageFilter(templateEngine);
 
         httpSecurity
-//                .csrf(csrf -> csrf.disable())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(
                         new AntPathRequestMatcher("/oauth2/**"),   // 授权端点
                         new AntPathRequestMatcher("/passport/**"),   // passport 端点
@@ -56,11 +48,6 @@ public class AppConfig {
                 .with(authorizationServerConfigurer, authorizationServer -> {
                     authorizationServer.oidc(Customizer.withDefaults());
                 })
-//                .authorizeHttpRequests(auth -> {
-//                    auth.requestMatchers(
-//                            "/passport/**",
-//                            "/login").permitAll();
-//                })
                 .requestCache(requestCache -> {
                     requestCache.requestCache(new CookieRequestCache());
                 })
@@ -71,13 +58,11 @@ public class AppConfig {
                     auth.anyRequest().authenticated();
                 })
 //                .formLogin(Customizer.withDefaults())
-//                .formLogin(formLogin -> formLogin.disable())
                 .rememberMe(remember -> {
                     remember.key("remember-me");
                 })
                 .addFilterAfter(sendCodeFilter, LogoutFilter.class)
                 .addFilterAfter(loginPageFilter, SendCodeFilter.class)
-
 //                .exceptionHandling(exception -> {
 //                    log.info("exceptionHandling ::: exp {}", exception);
 //                    exception.authenticationEntryPoint((request, response, authException) -> {
@@ -87,8 +72,6 @@ public class AppConfig {
 //                        response.sendRedirect(request.getContextPath() + "/passport/login");
 //                    });
 //                })
-//                .addFilterBefore(new LoginFilter(), UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(new LoginPageFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
         return httpSecurity.build();
     }

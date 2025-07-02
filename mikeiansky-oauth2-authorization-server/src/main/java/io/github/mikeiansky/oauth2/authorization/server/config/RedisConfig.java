@@ -23,6 +23,10 @@ public final class RedisConfig {
         return String.format("%s:login:user:%s:%s", prefix, channel, user);
     }
 
+    public static String getLoginSmsCode(String nationCode, String mobile) {
+        return String.format("%s:login:sms:code:%s:%s", prefix, nationCode, mobile);
+    }
+
     public static String getAuthorizationIdKey(String id) {
         return String.format("%s:authorization:id:%s", prefix, id);
     }
