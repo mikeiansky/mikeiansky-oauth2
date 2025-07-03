@@ -120,9 +120,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         // access token
         OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getToken(OAuth2AccessToken.class);
         if (accessToken != null) {
-            String accessTokenId = IdUtil.fastSimpleUUID();
             AccessToken token = new AccessToken();
-            token.setId(accessTokenId);
             token.setAuthorizationId(authorizationId);
             token.setValue(accessToken.getToken().getTokenValue());
             token.setIssuedAt(accessToken.getToken().getIssuedAt());
@@ -132,15 +130,15 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             token.setMetadata(JSON.toJSONString(accessToken.getMetadata()));
             token.setGrantType(authorization.getAuthorizationGrantType());
 
-            String accessTokenKey = RedisConfig.getAccessTokenKey(accessTokenId);
+            String accessTokenKey = RedisConfig.getAccessTokenKey(accessToken.getToken().getTokenValue());
             redisTemplate.opsForValue().set(accessTokenKey, JSON.toJSONString(token));
         }
 
         // refresh token
         OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getToken(OAuth2RefreshToken.class);
         if (refreshToken != null) {
-            String refreshTokenId = IdUtil.fastSimpleUUID();
-            String refreshTokenKey = RedisConfig.getRefreshTokenKey(refreshTokenId);
+//            String refreshTokenId = IdUtil.fastSimpleUUID();
+            String refreshTokenKey = RedisConfig.getRefreshTokenKey(refreshToken.getToken().getTokenValue());
             redisTemplate.opsForValue().set(refreshTokenKey, authorizationId);
 
             entity.setRefreshTokenValue(refreshToken.getToken().getTokenValue());
@@ -209,7 +207,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 return null;
             }
             OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(RegisteredClient.withId(accessToken.getClientId()).build())
-                    .id(accessToken.getId())
+                    .id(accessToken.getAuthorizationId())
                     .principalName(accessToken.getPrincipalHolder().getName())
                     .authorizationGrantType(accessToken.getGrantType())
                     .authorizedScopes(accessToken.getScopes());

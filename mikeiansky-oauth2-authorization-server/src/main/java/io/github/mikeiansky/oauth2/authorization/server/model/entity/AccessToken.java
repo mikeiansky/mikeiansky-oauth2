@@ -32,8 +32,6 @@ public class AccessToken {
 
     private String metadata;
 
-    private String id;
-
     private AuthorizationGrantType grantType;
 
     private String authorizationId;

@@ -23,7 +23,8 @@ spring:
             client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
             redirect-uri: http://127.0.0.1:8001/login/oauth2/code/login-client
-            scope: openid,profile
+#            scope: openid,profile
+            scope: profile
 #            scope: profile
             client-name: Spring
           github:
@@ -38,8 +39,8 @@ spring:
             authorization-uri: http://localhost:9001/oauth2/authorize
             token-uri: http://localhost:9001/oauth2/token
             jwk-set-uri: http://localhost:9001/oauth2/jwks
-#            user-info-uri: http://localhost:9001/userinfo
-#            user-name-attribute: sub
+            user-info-uri: http://localhost:9001/oauth2/introspect
+            user-name-attribute: sub
           github:
             authorization-uri: https://github.com/login/oauth/authorize
             token-uri: https://github.com/login/oauth/access_token

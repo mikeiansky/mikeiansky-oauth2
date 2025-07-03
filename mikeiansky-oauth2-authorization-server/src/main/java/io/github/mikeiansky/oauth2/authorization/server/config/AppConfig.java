@@ -1,5 +1,7 @@
 package io.github.mikeiansky.oauth2.authorization.server.config;
 
+import io.github.mikeiansky.oauth2.authorization.server.context.OpaqueTokenIntrospectorImpl;
+import io.github.mikeiansky.oauth2.authorization.server.context.UuidOAuth2TokenGenerator;
 import io.github.mikeiansky.oauth2.authorization.server.filter.LoginFilter;
 import io.github.mikeiansky.oauth2.authorization.server.filter.LoginPageFilter;
 import io.github.mikeiansky.oauth2.authorization.server.filter.SendCodeFilter;
@@ -10,7 +12,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
+import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.savedrequest.CookieRequestCache;
@@ -30,6 +36,10 @@ public class AppConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
                                                    RedisTemplate<String, String> redisTemplate,
                                                    TemplateEngine templateEngine) throws Exception {
+
+
+        httpSecurity.setSharedObject(OAuth2TokenGenerator.class, new UuidOAuth2TokenGenerator());
+
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
@@ -38,6 +48,8 @@ public class AppConfig {
         SendCodeFilter sendCodeFilter = new SendCodeFilter(redisTemplate);
         LoginPageFilter loginPageFilter = new LoginPageFilter(templateEngine);
         LoginFilter loginFilter = new LoginFilter(redisTemplate, redisSecurityContextRepository, requestCache);
+
+        OpaqueTokenIntrospectorImpl opaqueTokenIntrospector = new OpaqueTokenIntrospectorImpl(redisTemplate);
 
         httpSecurity
                 .csrf(csrf -> csrf.ignoringRequestMatchers(
@@ -58,6 +70,7 @@ public class AppConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.anyRequest().authenticated();
                 })
+                .authenticationProvider(new OpaqueTokenAuthenticationProvider(opaqueTokenIntrospector))
 //                .formLogin(Customizer.withDefaults())
                 .rememberMe(remember -> {
                     remember.key("remember-me");
