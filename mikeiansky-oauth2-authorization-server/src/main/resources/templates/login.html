@@ -90,16 +90,16 @@
             }
         }, 1000);
 
-        // 获取 CSRF Token（从 Thymeleaf 渲染的隐藏字段）
-        const csrfToken = document.querySelector('input[name="_csrf"]').value;
-        const csrfParameter = document.querySelector('input[name="_csrf"]').name;
+        // // 获取 CSRF Token（从 Thymeleaf 渲染的隐藏字段）
+        // const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        // const csrfParameter = document.querySelector('input[name="_csrf"]').name;
 
         // 调用后端接口发送验证码
         fetch('/passport/send-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken // 关键：添加 CSRF Token
+                // 'X-CSRF-TOKEN': csrfToken // 关键：添加 CSRF Token
             },
             body: JSON.stringify({ mobile: mobile, channel: "pc" })
         }).then(res => {

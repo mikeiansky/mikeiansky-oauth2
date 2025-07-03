@@ -61,10 +61,7 @@ public class RedisSecurityContextRepository implements SecurityContextRepository
         log.info("save authentication class : {}, value : {} ", authentication.getClass().getName(),
                 JSON.toJSONString(authentication));
 
-        String userId = null;
-        if (authentication.getPrincipal() instanceof User user) {
-            userId = user.getUsername();
-        }
+        String userId = authentication.getPrincipal().toString();
         String authenticationJson = JSON.toJSONString(context.getAuthentication());
         String loginUserKey = RedisConfig.getLoginUserKey(userId, "pc");
         String loginTokenCache = redisTemplate.opsForValue().get(loginUserKey);
